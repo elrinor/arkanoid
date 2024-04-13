@@ -17,14 +17,30 @@ var playerBall = {
 
 var playerSpeed = 600;
 
-var smallBall = {
-    x : 330,
-    y : 20,
-    r : 10,
-    dx : 0,
-    dy : 400,
+class SmallBall {
+    constructor(x, y, r, dx, dy, inGame){
+        this.x = x;
+        this.y = y;
+        this.r = r;
+        this.dx = dx;
+        this.dy = dy;
+        this.inGame = inGame;
+    }
 }
 
+const ballArray = [];
+
+for (let i = 0; i < 10; i++) {
+    const smallBall = new SmallBall(
+      330,
+      Math.random() * canvas.height,
+      10,
+      0,
+      400,
+      true
+    );
+    ballArray.push(smallBall);
+  }
 background = 'black';
 
 document.addEventListener("keydown", function (event) {
@@ -68,49 +84,56 @@ function doGameLoop(timeMs) {
         playerBall.x = playerBall.r;
     }
 
-    smallBall.x += smallBall.dx * deltaTime;
-    smallBall.y += smallBall.dy * deltaTime;
 
-    if (smallBall.x - smallBall.r < 0) {
-        smallBall.x = smallBall.r;
-        smallBall.dx = -smallBall.dx;
-    }
-    if (smallBall.x + smallBall.r > canvas.width) {
-        smallBall.x = canvas.width - smallBall.r;
-        smallBall.dx = -smallBall.dx;
-    }
-    if (smallBall.y - smallBall.r < 0) {
-        smallBall.y = smallBall.r;
-        smallBall.dy = -smallBall.dy;
-    }
-    if (smallBall.y + smallBall.r > canvas.height) {
-        background = 'red'; // ded.
-    }
+    ballArray.forEach(element => {
+        element.x += element.dx * deltaTime;
+        element.y += element.dy * deltaTime;
 
-    if (sqr(smallBall.x - playerBall.x) + sqr(smallBall.y - playerBall.y) < sqr(smallBall.r + playerBall.r)) {
-        var unit = {
-            x : playerBall.x - smallBall.x,
-            y : playerBall.y - smallBall.y
-        };
-        var len = Math.sqrt(sqr(unit.x) + sqr(unit.y));
-        unit.x /= len;
-        unit.y /= len;
-
-        var dot = unit.x * smallBall.dx + unit.y * smallBall.dy;
-
-        smallBall.x = playerBall.x - unit.x * (smallBall.r + playerBall.r);
-        smallBall.y = playerBall.y - unit.y * (smallBall.r + playerBall.r);
-
-        if (dot > 0) {
-            smallBall.dx -= 2 * dot * unit.x;
-            smallBall.dy -= 2 * dot * unit.y;
-
-            // Speed shit up
-            smallBall.dx *= 1.1;
-            smallBall.dy *= 1.1;
+        if (element.x - element.r < 0) {
+            element.x = element.r;
+            element.dx = -element.dx;
         }
-    }
+        if (element.x + element.r > canvas.width) {
+            element.x = canvas.width - element.r;
+            element.dx = - element.dx;
+        }
+        if (element.y - element.r < 0) {
+            element.y = element.r;
+            element.dy = -element.dy;
+        }
+        
+        if (element.y + element.r > canvas.height) {
+            element.inGame = false;
+            // check if all balls in the array are out of the screen 
+            if (ballArray.every(element => element.inGame === false)) {
+                background = "red"
+            }
+        }
+        
+        if (sqr(element.x - playerBall.x) + sqr(element.y - playerBall.y) < sqr(element.r + playerBall.r)) {
+            var unit = {
+                x : playerBall.x - element.x,
+                y : playerBall.y - element.y
+            };
+            var len = Math.sqrt(sqr(unit.x) + sqr(unit.y));
+            unit.x /= len;
+            unit.y /= len;
 
+            var dot = unit.x * element.dx + unit.y * element.dy;
+
+            element.x = playerBall.x - unit.x * (element.r + playerBall.r);
+            element.y = playerBall.y - unit.y * (element.r + playerBall.r);
+
+            if (dot > 0) {
+                element.dx -= 2 * dot * unit.x;
+                element.dy -= 2 * dot * unit.y;
+
+                    // Speed shit up
+                element.dx *= 1.1;
+                element.dy *= 1.1;
+            }
+        }
+    });
     render();
 }
 
@@ -123,10 +146,12 @@ function render() {
     context.fillStyle = 'white';
     context.fill();
 
-    context.beginPath();
-    context.arc(smallBall.x, smallBall.y, smallBall.r, 0, 2 * Math.PI, false);
-    context.fillStyle = 'white';
-    context.fill();
+    ballArray.forEach(element => {
+        context.beginPath();
+        context.arc(element.x, element.y, element.r, 0, 2 * Math.PI, false);
+        context.fillStyle = 'white';
+        context.fill();
+    });
 }
 
 requestAnimationFrame(gameloop);
