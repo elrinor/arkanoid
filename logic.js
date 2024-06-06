@@ -43,6 +43,46 @@ for (let i = 0; i < 10; i++) {
   }
 background = 'black';
 
+function ballCollision(smallBall1, smallBall2) {
+    let tipsTouchingX = smallBall2.x - smallBall1.x;
+    let tipsTouchingY = smallBall2.y - smallBall1.y;
+    let distance = Math.sqrt(tipsTouchingX * tipsTouchingX + tipsTouchingY * tipsTouchingY);
+    let minDistance = smallBall1.r + smallBall2.r;
+    let overlap = (smallBall1.r + smallBall2.r) - distance;
+    // so that the balls don't get stuck in each other 
+    let nx = tipsTouchingX / distance;
+    let ny = tipsTouchingY / distance;
+    // normal vector ??
+
+    if (distance < minDistance) {
+        let tx = -ny;
+        let ty = nx;
+        // tangent vector
+
+        let dpTan1 = smallBall1.dx * tx + smallBall1.dy * ty;
+        let dpTan2 = smallBall2.dx * tx + smallBall2.dy * ty;  
+
+        let dpNorm1 = smallBall1.dx * nx + smallBall1.dy * ny;
+        let dpNorm2 = smallBall2.dx * nx + smallBall2.dy * ny;
+
+        smallBall1.dx = tx * dpTan1 + nx * dpNorm2;
+        smallBall1.dy = ty * dpTan1 + ny * dpNorm2;
+        smallBall2.dx = tx * dpTan2 + nx * dpNorm1;
+        smallBall2.dy = ty * dpTan2 + ny * dpNorm1;
+
+        smallBall1.x -= nx * overlap / 2;
+        smallBall1.y -= ny * overlap / 2;
+        smallBall2.x += nx * overlap / 2;
+        smallBall2.y += ny * overlap / 2;
+
+        // smallBall1.dx = -smallBall1.dx;
+        // smallBall1.dy = -smallBall1.dy;
+        // smallBall2.dx = -smallBall2.dx;
+        // smallBall2.dy = -smallBall2.dy;
+    }
+}
+
+
 document.addEventListener("keydown", function (event) {
     isKeyDown[event.key] = true;
     console.log(event.key);
@@ -84,6 +124,11 @@ function doGameLoop(timeMs) {
         playerBall.x = playerBall.r;
     }
 
+    for (let i = 0; i < ballArray.length; i++) {
+        for(let j = i + 1; j < ballArray.length; j++) {
+            ballCollision(ballArray[i], ballArray[j]);
+        }
+    }
 
     ballArray.forEach(element => {
         element.x += element.dx * deltaTime;
@@ -109,6 +154,13 @@ function doGameLoop(timeMs) {
                 background = "red"
             }
         }
+
+        if (element.inGame === false) {
+            element.y = -300;
+            element.dy = 0;
+        }
+        // to prevent the possibility of balls coming back into the field
+
         
         if (sqr(element.x - playerBall.x) + sqr(element.y - playerBall.y) < sqr(element.r + playerBall.r)) {
             var unit = {
