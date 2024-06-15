@@ -28,6 +28,30 @@ class SmallBall {
     }
 }
 
+class Block {
+    constructor(x, y, width, height, padding, healthStatus) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.padding = padding;
+        this.healthStatus = healthStatus
+    }
+}
+
+const blockArray = []
+
+for(let i = 0; i < 10; i++) {
+    const blockItem = new Block(
+        i * (50 + 5) + 5,
+        100,
+        50,
+        20,
+        5,
+        true
+    )
+    blockArray.push(blockItem);
+}
 const ballArray = [];
 
 for (let i = 0; i < 10; i++) {
@@ -40,7 +64,7 @@ for (let i = 0; i < 10; i++) {
       true
     );
     ballArray.push(smallBall);
-  }
+}
 background = 'black';
 
 function ballCollision(smallBall1, smallBall2) {
@@ -74,14 +98,44 @@ function ballCollision(smallBall1, smallBall2) {
         smallBall1.y -= ny * overlap / 2;
         smallBall2.x += nx * overlap / 2;
         smallBall2.y += ny * overlap / 2;
-
-        // smallBall1.dx = -smallBall1.dx;
-        // smallBall1.dy = -smallBall1.dy;
-        // smallBall2.dx = -smallBall2.dx;
-        // smallBall2.dy = -smallBall2.dy;
     }
 }
 
+function ballBlockCollision(smallBall1, block) {
+    if(smallBall1.x + smallBall1.r > block.x &&
+        smallBall1.x - smallBall1.r < block.x + block.width &&
+        smallBall1.y + smallBall1.r > block.y &&
+        smallBall1.y - smallBall1.r < block.y + block.height
+    ) {
+        const overlapLeft = smallBall1.x + smallBall1.r - block.x;
+        const overlapRight = block.x + block.width - (smallBall1.x - smallBall1.r);
+        const overlapTop = smallBall1.y + smallBall1.r - block.y;
+        const overlapBottom = block.y + block.height - (smallBall1.y - smallBall1.r);
+        // figuring out which side is of the block is hit
+        const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+
+        if(minOverlap === overlapLeft) {
+            smallBall1.x = block.x - smallBall1.r;
+            // so ball and block don't get stuck to each other 
+            smallBall1.dx = -Math.abs(smallBall1.dx);
+            // so ball bounces off block properly
+        }else if(minOverlap === overlapRight) {
+            smallBall1.x = (block.x + block.width) + smallBall1.r;
+            smallBall1.dx = Math.abs(smallBall1.dx);
+        }else if(minOverlap === overlapTop) {
+            smallBall1.y = block.y - smallBall1.r;
+            smallBall1.dy = -Math.abs(smallBall1.dy);
+        }else if(minOverlap === overlapBottom) {
+            smallBall1.y = (block.y + block.height) + smallBall1.r;
+            smallBall1.dy = Math.abs(smallBall1.dy);
+        }
+
+        block.x = -200;
+        block.healthStatus = false;
+        // how the blocks disappear and how victory is achieved. healtStatus might be changed later 
+        // for different types of blocks
+    }
+}
 
 document.addEventListener("keydown", function (event) {
     isKeyDown[event.key] = true;
@@ -125,6 +179,13 @@ function doGameLoop(timeMs) {
     }
 
     for (let i = 0; i < ballArray.length; i++) {
+        for(let j = 0; j < blockArray.length; j++) {
+            ballBlockCollision(ballArray[i], blockArray[j]);
+        }
+    }
+    // block and ball arrays collision activation;
+
+    for (let i = 0; i < ballArray.length; i++) {
         for(let j = i + 1; j < ballArray.length; j++) {
             ballCollision(ballArray[i], ballArray[j]);
         }
@@ -153,6 +214,15 @@ function doGameLoop(timeMs) {
             if (ballArray.every(element => element.inGame === false)) {
                 background = "red"
             }
+        }
+
+        if (blockArray.every(element => element.healthStatus === false)) {
+            ballArray.forEach(element => {
+                element.dx = 0;
+                element.dy = 0;
+            });
+            background = "green";
+            // what happens when you win - green = winning $$$
         }
 
         if (element.inGame === false) {
@@ -203,6 +273,12 @@ function render() {
         context.arc(element.x, element.y, element.r, 0, 2 * Math.PI, false);
         context.fillStyle = 'white';
         context.fill();
+    });
+
+    blockArray.forEach(blockItem => {
+        context.fillStyle = 'blue';
+        context.fillRect(blockItem.x, blockItem.y, blockItem.width, blockItem.height);
+        // drawing the blocks on the screen
     });
 }
 
