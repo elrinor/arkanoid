@@ -137,14 +137,41 @@ function ballBlockCollision(smallBall1, block) {
     }
 }
 
-document.addEventListener("keydown", function (event) {
-    isKeyDown[event.key] = true;
-    console.log(event.key);
-});
-document.addEventListener("keyup", function (event) {
-    isKeyDown[event.key] = false;
-});
+// document.addEventListener("keydown", function (event) {
+//     isKeyDown[event.key] = true;
+// });
+// document.addEventListener("keyup", function (event) {
+//     isKeyDown[event.key] = false;
+// });
+// event listeners for when the playerball is moved with arrowkeys instead of mouse;
+function mouseMoveHandler(e) {
+    const relativeX = e.clientX - canvas.offsetLeft;
 
+    if(relativeX > playerBall.r && relativeX < canvas.width - playerBall.r) {
+        playerBall.x = relativeX;
+    };
+    if(relativeX > 640) {
+        playerBall.x = canvas.width - playerBall.r;
+        // check if mouse leaves canvas on the right side;
+    };
+    if(relativeX < 0) {
+        playerBall.x = playerBall.r;
+        // check if mouse leaves canvas on the left side;
+    }
+};
+
+function mouseLeaveHandler(e) {
+    const relativeX = e.clientX - canvas.offsetLeft;
+    if(relativeX < canvas.offsetLeft) {
+        // checks if mouse left screen from left side
+        playerBall.x = playerBall.r;
+    };
+};
+// for when the mouse leaves the browser from the left side 
+// bug probably only seen on Linux cause of the favourites sidebar on the left
+document.addEventListener('mousemove', mouseMoveHandler, false);
+document.addEventListener('mouseleave', mouseLeaveHandler, false);
+// event listeners and functionality for playerball  movement with mouse
 lastTimeMs = null;
 
 function sqr(x) {
@@ -165,19 +192,19 @@ function doGameLoop(timeMs) {
     deltaTime = (timeMs - lastTimeMs) / 1000.0;
     lastTimeMs = timeMs;
 
-    if (isKeyDown['ArrowLeft'] === true) {
-        playerBall.x -= playerSpeed * deltaTime;
-    }
-    if (isKeyDown['ArrowRight'] === true) {
-        playerBall.x += playerSpeed * deltaTime;
-    }
-    if (playerBall.x + playerBall.r > canvas.width) {
-        playerBall.x = canvas.width - playerBall.r;
-    }
-    if (playerBall.x - playerBall.r < 0) {
-        playerBall.x = playerBall.r;
-    }
-
+    // if (isKeyDown['ArrowLeft'] === true) {
+    //     playerBall.x -= playerSpeed * deltaTime;
+    // }
+    // if (isKeyDown['ArrowRight'] === true) {
+    //     playerBall.x += playerSpeed * deltaTime;
+    // }
+    // if (playerBall.x + playerBall.r > canvas.width) {
+    //     playerBall.x = canvas.width - playerBall.r;
+    // }
+    // if (playerBall.x - playerBall.r < 0) {
+    //     playerBall.x = playerBall.r;
+    // }
+    // moving the ball with arrowkeys logic
     for (let i = 0; i < ballArray.length; i++) {
         for(let j = 0; j < blockArray.length; j++) {
             ballBlockCollision(ballArray[i], blockArray[j]);
